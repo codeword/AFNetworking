@@ -57,7 +57,7 @@
     [operation connection:nil didReceiveData:responseData];
     //You must override the AFOperation class to return YES for isFinished to have this work correctly
     //[operation start];
-    //[operation connectionDidFinishLoading:nil];
+    [operation connectionDidFinishLoading:nil];
     void (^completionBlock)(void) = [operation completionBlock];
     NSAssert(completionBlock, @"Completion block was nil! It's a bad operation");
     completionBlock();
