@@ -101,7 +101,50 @@ typedef enum {
 @class AFHTTPRequestOperation;
 @protocol AFMultipartFormData;
 
-@interface AFHTTPClient : NSObject <NSCoding, NSCopying>
+@protocol AFHTTPClient <NSObject>
+
+/**
+ Enqueues an `AFHTTPRequestOperation` to the HTTP client's operation queue.
+
+ @param operation The HTTP request operation to be enqueued.
+ */
+- (void)enqueueHTTPRequestOperation:(AFHTTPRequestOperation *)operation;
+
+/**
+ Creates an `NSMutableURLRequest` object with the specified HTTP method and path.
+
+ If the HTTP method is `GET`, `HEAD`, or `DELETE`, the parameters will be used to construct a url-encoded query string that is appended to the request's URL. Otherwise, the parameters will be encoded according to the value of the `parameterEncoding` property, and set as the request body.
+
+ @param method The HTTP method for the request, such as `GET`, `POST`, `PUT`, or `DELETE`. This parameter must not be `nil`.
+ @param path The path to be appended to the HTTP client's base URL and used as the request URL. If `nil`, no path will be appended to the base URL.
+ @param parameters The parameters to be either set as a query string for `GET` requests, or the request HTTP body.
+
+ @return An `NSMutableURLRequest` object
+ */
+- (NSMutableURLRequest *)requestWithMethod:(NSString *)method
+                                      path:(NSString *)path
+                                parameters:(NSDictionary *)parameters;
+
+///-------------------------------
+/// @name Creating HTTP Operations
+///-------------------------------
+
+/**
+ Creates an `AFHTTPRequestOperation`.
+
+ In order to determine what kind of operation is created, each registered subclass conforming to the `AFHTTPClient` protocol is consulted (in reverse order of when they were specified) to see if it can handle the specific request. The first class to return `YES` when sent a `canProcessRequest:` message is used to generate an operation using `HTTPRequestOperationWithRequest:success:failure:`.
+
+ @param urlRequest The request object to be loaded asynchronously during execution of the operation.
+ @param success A block object to be executed when the request operation finishes successfully. This block has no return value and takes two arguments: the created request operation and the object created from the response data of request.
+ @param failure A block object to be executed when the request operation finishes unsuccessfully, or that finishes successfully, but encountered an error while parsing the response data. This block has no return value and takes two arguments:, the created request operation and the `NSError` object describing the network or parsing error that occurred.
+ */
+- (AFHTTPRequestOperation *)HTTPRequestOperationWithRequest:(NSURLRequest *)urlRequest
+                                                    success:(void (^)(AFHTTPRequestOperation *operation, id responseObject))success
+                                                    failure:(void (^)(AFHTTPRequestOperation *operation, NSError *error))failure;
+
+@end
+
+@interface AFHTTPClient : NSObject <AFHTTPClient, NSCoding, NSCopying>
 
 ///---------------------------------------
 /// @name Accessing HTTP Client Properties
@@ -273,21 +316,6 @@ typedef enum {
 ///-------------------------------
 
 /**
- Creates an `NSMutableURLRequest` object with the specified HTTP method and path.
-
- If the HTTP method is `GET`, `HEAD`, or `DELETE`, the parameters will be used to construct a url-encoded query string that is appended to the request's URL. Otherwise, the parameters will be encoded according to the value of the `parameterEncoding` property, and set as the request body.
-
- @param method The HTTP method for the request, such as `GET`, `POST`, `PUT`, or `DELETE`. This parameter must not be `nil`.
- @param path The path to be appended to the HTTP client's base URL and used as the request URL. If `nil`, no path will be appended to the base URL.
- @param parameters The parameters to be either set as a query string for `GET` requests, or the request HTTP body.
-
- @return An `NSMutableURLRequest` object
- */
-- (NSMutableURLRequest *)requestWithMethod:(NSString *)method
-                                      path:(NSString *)path
-                                parameters:(NSDictionary *)parameters;
-
-/**
  Creates an `NSMutableURLRequest` object with the specified HTTP method and path, and constructs a `multipart/form-data` HTTP body, using the specified parameters and multipart form data block. See http://www.w3.org/TR/html4/interact/forms.html#h-17.13.4.2
 
  Multipart form requests are automatically streamed, reading files directly from disk along with in-memory data in a single HTTP body. The resulting `NSMutableURLRequest` object has an `HTTPBodyStream` property, so refrain from setting `HTTPBodyStream` or `HTTPBody` on this request object, as it will clear out the multipart form body stream.
@@ -304,33 +332,9 @@ typedef enum {
                                              parameters:(NSDictionary *)parameters
                               constructingBodyWithBlock:(void (^)(id <AFMultipartFormData> formData))block;
 
-///-------------------------------
-/// @name Creating HTTP Operations
-///-------------------------------
-
-/**
- Creates an `AFHTTPRequestOperation`.
-
- In order to determine what kind of operation is created, each registered subclass conforming to the `AFHTTPClient` protocol is consulted (in reverse order of when they were specified) to see if it can handle the specific request. The first class to return `YES` when sent a `canProcessRequest:` message is used to generate an operation using `HTTPRequestOperationWithRequest:success:failure:`.
-
- @param urlRequest The request object to be loaded asynchronously during execution of the operation.
- @param success A block object to be executed when the request operation finishes successfully. This block has no return value and takes two arguments: the created request operation and the object created from the response data of request.
- @param failure A block object to be executed when the request operation finishes unsuccessfully, or that finishes successfully, but encountered an error while parsing the response data. This block has no return value and takes two arguments:, the created request operation and the `NSError` object describing the network or parsing error that occurred.
- */
-- (AFHTTPRequestOperation *)HTTPRequestOperationWithRequest:(NSURLRequest *)urlRequest
-                                                    success:(void (^)(AFHTTPRequestOperation *operation, id responseObject))success
-                                                    failure:(void (^)(AFHTTPRequestOperation *operation, NSError *error))failure;
-
 ///----------------------------------------
 /// @name Managing Enqueued HTTP Operations
 ///----------------------------------------
-
-/**
- Enqueues an `AFHTTPRequestOperation` to the HTTP client's operation queue.
-
- @param operation The HTTP request operation to be enqueued.
- */
-- (void)enqueueHTTPRequestOperation:(AFHTTPRequestOperation *)operation;
 
 /**
  Cancels all operations in the HTTP client's operation queue whose URLs match the specified HTTP method and path.
