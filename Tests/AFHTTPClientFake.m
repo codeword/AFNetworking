@@ -48,14 +48,16 @@
     NSData *responseData = [responseString dataUsingEncoding:NSUTF8StringEncoding];
     AFHTTPRequestOperation *operation = [self.httpOperations lastObject];
     [self.httpOperations removeLastObject];
-    NSURLResponse *response = [[NSURLResponse alloc] initWithURL:[NSURL URLWithString:@"http://example.com/foo.bar"]
-                                                        MIMEType:@"application/json"
-                                           expectedContentLength:0
-                                                textEncodingName:@"application/json"];
+    NSURLResponse *response = nil;
+    response = [[NSURLResponse alloc] initWithURL:[NSURL URLWithString:@"http://example.com/foo.bar"]
+                                         MIMEType:@"application/json"
+                            expectedContentLength:0
+                                 textEncodingName:@"application/json"];
     [operation connection:nil didReceiveResponse:response];
     [operation connection:nil didReceiveData:responseData];
-    [operation start];
-    [operation connectionDidFinishLoading:nil];
+    //You must override the AFOperation class to return YES for isFinished to have this work correctly
+    //[operation start];
+    //[operation connectionDidFinishLoading:nil];
     void (^completionBlock)(void) = [operation completionBlock];
     NSAssert(completionBlock, @"Completion block was nil! It's a bad operation");
     completionBlock();
