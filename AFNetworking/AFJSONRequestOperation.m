@@ -21,6 +21,11 @@
 // THE SOFTWARE.
 
 #import "AFJSONRequestOperation.h"
+#ifdef SPECS
+void dispatch_async(dispatch_queue_t queue, dispatch_block_t block) {
+    block();
+}
+#endif
 
 static dispatch_queue_t json_request_operation_processing_queue() {
     static dispatch_queue_t af_json_request_operation_processing_queue;
